@@ -1,0 +1,106 @@
+## Xinyu Leng Question 4
+
+## Packages and Datasets
+library(mosaic)
+library(tidyverse)
+library(FNN)
+library(foreach)
+sclass <- read.csv("C:/Users/Administrator/Desktop/sclass.csv", stringsAsFactors=TRUE)
+
+
+## The variables involved
+summary(sclass)
+
+
+# Focus on first trim level: 350
+sclass350 = subset(sclass, trim == '350')
+dim(sclass350)
+
+
+# create a train/test split
+N = nrow(sclass350)
+N_train = floor(0.8*N)
+train_ind = sample.int(N, N_train, replace=FALSE)
+
+sclass350_train = sclass350[train_ind,]
+sclass350_test = sclass350[-train_ind,]
+
+y_train_350 = sclass350_train$price
+X_train_350 = data.frame(mileage = sclass350_train$mileage)
+y_test_350 = sclass350_test$price
+X_test_350 = data.frame(mileage = sclass350_test$mileage)
+
+
+rmse = function(y, ypred) {
+  sqrt(mean((y-ypred)^2))
+}
+
+k_grid = unique(round(exp(seq(log(N_train), log(2), length=100))))
+rmse_grid_out = foreach(k = k_grid, .combine='c') %do% {
+  knn_model = knn.reg(X_train_350, X_test_350, y_train_350, k = k)
+  rmse(y_test_350, knn_model$pred)
+}
+
+rmse_grid_out = data.frame(K = k_grid, RMSE = rmse_grid_out)
+
+
+ggplot(data=rmse_grid_out) + 
+  geom_path(aes(x=K, y=RMSE, color='testset'), size=1.5) 
+ind_best = which.min(rmse_grid_out$RMSE)
+k_best = k_grid[ind_best]
+geom_vline(xintercept=k_best, color='darkgreen', size=1.5)
+
+# fit the model at the optimal k
+knn_model_bestk = knn.reg(X_train_350, X_test_350, y_train_350, k = k_best)
+rmse_best = rmse(y_test_350, knn_model$pred)
+
+ggplot(data=rmse_grid_out)+
+geom_path(mapping = aes(x=k_best, y=rmse_best), color='red', size=1.5)
+
+
+
+# Focus on second trim level: 65 AMG
+sclass65AMG = subset(sclass, trim == '65 AMG')
+dim(sclass65AMG)
+# create a train/test split
+N = nrow(sclass65AMG)
+N_train = floor(0.8*N)
+train_ind = sample.int(N, N_train, replace=FALSE)
+
+sclass65AMG_train = sclass65AMG[train_ind,]
+sclass65AMG_test = sclass65AMG[-train_ind,]
+
+y_train_65AMG = sclass65AMG_train$price
+X_train_65AMG = data.frame(mileage = sclass65AMG_train$mileage)
+y_test_65AMG = sclass65AMG_test$price
+X_test_65AMG = data.frame(mileage = sclass65AMG_test$mileage)
+
+
+rmse1 = function(y, ypred) {
+  sqrt(mean((y-ypred)^2))
+}
+
+k_grid1 = unique(round(exp(seq(log(N_train), log(2), length=100))))
+rmse1_grid_out = foreach(k = k_grid1, .combine='c') %do% {
+  knn_model1 = knn.reg(X_train_65AMG, X_test_65AMG, y_train_65AMG, k = k)
+  rmse1(y_test_65AMG, knn_model1$pred)
+}
+
+rmse1_grid_out = data.frame(K = k_grid1, RMSE1 = rmse1_grid_out)
+
+
+ggplot(data=rmse1_grid_out) + 
+  geom_path(aes(x=K, y=RMSE1, color='testset'), size=1.5) 
+ind_best = which.min(rmse1_grid_out$RMSE1)
+k_best1 = k_grid1[ind_best]
+geom_vline(xintercept=k_best, color='darkgreen', size=1.5)
+
+# fit the model at the optimal k
+knn_model_besk1 = knn.reg(X_train_65AMG, X_test_65AMG, y_train_65AMG, k = k_best1)
+rmse_best1 = rmse(y_test_65AMG, knn_model$pred)
+
+ggplot(data=rmse1_grid_out)+
+geom_path(mapping = aes(x=k_best1, y=rmse_best1), color='blue', size=1.5)
+
+\textbf{Conclusion} K_best>k_best1,350 has a larger optimal value of k. 
+

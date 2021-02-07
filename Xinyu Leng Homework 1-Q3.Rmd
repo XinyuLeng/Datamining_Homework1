@@ -1,0 +1,71 @@
+
+## Xinyu Leng Question 3
+
+## Dataset and Pakages
+
+ABIA <- read.csv("C:/Users/Administrator/Desktop/ABIA.csv", stringsAsFactors=TRUE)
+ View(ABIA)
+library(ggplot2)
+library(tidyverse)
+
+## consider the best time of day to fly to minimize delays
+
+## select the variables
+ABIA2<-select(ABIA,Year,Month,DayofMonth,DayOfWeek,CRSDepTime,DepDelay,UniqueCarrier)
+## Filter the variables
+ABIA2<-filter(ABIA2, !is.na(DepDelay), !is.na(CRSDepTime))
+## group by the CRSDepTime
+by_CRSDepTime<-group_by(ABIA2,CRSDepTime)
+delay2<-summarise(by_CRSDepTime,count = n(),
+                 flytime=mean(CRSDepTime , na.rm = TRUE),
+                 delay2=mean(DepDelay, na.rm = TRUE))
+View(delay2)
+
+## Data Visualization
+ggplot(data = delay2) +
+   geom_point(mapping = aes(x=flytime,y=delay2))
+   geom_smooth(method='lm',mapping = aes(x=flytime,y=delay2))
+   
+## consider this change by airline?
+   
+## Group by UniqueCarrier
+by_UniqueCarrier<-group_by(ABIA2,UniqueCarrier) 
+delay3<-summarise(by_UniqueCarrier,count = n(),
+                 flytime=mean(CRSDepTime , na.rm = TRUE),
+                 delay3=mean(DepDelay, na.rm = TRUE))
+View(delay3)
+
+## Data Visualization
+ggplot(data = delay3) +
+   geom_point(mapping = aes(x=flytime,y=delay3))
+   geom_smooth(method='lm',mapping = aes(x=flytime,y=delay3))
+   
+ggplot(data = delay3) +
+   geom_point(mapping = aes(x=UniqueCarrier,y=delay3))
+   geom_smooth(method='lm',mapping = aes(x=UniqueCarrier,y=delay3))
+
+
+\textbf{Conclusion} As we can see in the graph, the best time of day to minimize delays is before 1000 and after 2000 (most of the average delay time is lower than 25). The airline could not change this because peopel would more likely to fly by day.
+
+
+## Consider the correlation between fly distance and flight delay
+
+## select the variables
+ABIA1<-select(ABIA,Year,Month,DayofMonth,DayOfWeek,DepDelay,ArrDelay,Distance,Dest)
+## Filter the variables
+ABIA1<-filter(ABIA1, !is.na(DepDelay), !is.na(ArrDelay))
+
+## group by the destination
+by_Dest<-group_by(ABIA1,Dest)
+delay<-summarise(by_Dest,count = n(),
+                 dist=mean(Distance , na.rm = TRUE),
+                 delay=mean(ArrDelay, na.rm = TRUE))
+View(delay)
+## remove noise data
+delay<-filter(delay,count > 20)
+## Data Visualization
+ggplot(data = delay) +
+   geom_point(mapping = aes(x=dist,y=delay))
+   geom_smooth(method = 'loess',mapping = aes(x=dist,y=delay))
+  
+\textbf{Conclusion} As we can see in the graph, when the distance is 0-1200, the average delay time have a negative trend with the distance, when the distance is larger than 1200, the average delay time have a positive trend with the distance.
